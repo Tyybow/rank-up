@@ -1060,7 +1060,6 @@
 
     var backupBarHtml =
       '<div class="backup-bar">' +
-        '<button type="button" id="exportBackupBtn" class="backup-link">💾 Exporter ma progression</button>' +
         '<label for="importBackupInput" class="backup-link">📥 Importer une sauvegarde</label>' +
         '<input type="file" id="importBackupInput" accept="application/json" style="display:none">' +
         (ui.backupMessage ? '<div class="backup-message ' + (ui.backupOk ? "ok" : "err") + '">' + esc(ui.backupMessage) + "</div>" : "") +
@@ -1105,6 +1104,7 @@
           "</div>" +
         "</div>";
       document.getElementById("rankupContinueBtn").addEventListener("click", function () {
+        exportBackup();
         if (m.pendingSelect) ui.selectedRank = m.pendingSelect;
         ui.fbSession = "A";
         ui.rankUpModal = null;
@@ -1175,6 +1175,7 @@
       "</div>";
 
     document.getElementById("rankupContinueBtn").addEventListener("click", function () {
+      exportBackup();
       if (m.pendingSelect) ui.selectedRank = m.pendingSelect;
       if (m.kind === "gym") ui.fbSession = "A";
       ui.rankUpModal = null;
@@ -1367,9 +1368,6 @@
         });
       });
     }
-
-    var exportBtn = document.getElementById("exportBackupBtn");
-    if (exportBtn) exportBtn.addEventListener("click", exportBackup);
 
     var importInput = document.getElementById("importBackupInput");
     if (importInput) {
