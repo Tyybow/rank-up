@@ -1,0 +1,1322 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rank Up — Suivi Natation &amp; Full Body</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Bebas+Neue&display=swap');
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #0a0b0f; }
+  body { min-height: 100%; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0a0b0f; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+  #app { min-height: 100vh; background: #0a0b0f; font-family: 'Rajdhani', 'Bebas Neue', sans-serif; color: #fff; position: relative; }
+
+  .glow-bg { position: fixed; top: 20%; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; pointer-events: none; z-index: 0; transition: background 0.6s ease; }
+
+  .shell { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  .save-error { text-align: center; padding: 8px; margin-bottom: 16px; border-radius: 4px; background: rgba(239,83,80,0.1); border: 1px solid rgba(239,83,80,0.3); color: #ef8a87; font-family: 'Rajdhani'; font-size: 11px; }
+
+  .app-header { text-align: center; margin-bottom: 32px; }
+  .app-header .eyebrow { font-family: 'Bebas Neue'; font-size: 11px; letter-spacing: 6px; color: #555; margin-bottom: 6px; }
+  .app-header .title { font-family: 'Bebas Neue'; font-size: 42px; letter-spacing: 4px; line-height: 1; color: #fff; }
+
+  .tabs { display: flex; justify-content: center; gap: 0; margin-bottom: 32px; border-bottom: 1px solid #1a1a1a; }
+  .tab-btn { background: none; border: none; cursor: pointer; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: #444; padding: 8px 20px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-btn.active { border-bottom-width: 2px; border-bottom-style: solid; }
+
+  .rank-selector { display: flex; justify-content: flex-start; gap: 2px; align-items: flex-end; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 14px 10px; margin-bottom: 28px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .rank-selector::-webkit-scrollbar { display: none; }
+  .rank-btn { flex: none; background: none; border: none; padding: 8px 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 40px; min-height: 44px; transition: all 0.2s; opacity: 0.35; position: relative; cursor: not-allowed; }
+  .rank-btn.unlocked { cursor: pointer; opacity: 0.5; }
+  .rank-btn.unlocked:hover { opacity: 0.85; transform: translateY(-2px); }
+  .rank-btn.active { opacity: 1; }
+  .rank-btn.locked { cursor: not-allowed; opacity: 0.22; }
+  .rank-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; transition: all 0.2s; }
+  .rank-btn.active .rank-dot { width: 16px; height: 16px; box-shadow: 0 0 12px currentColor; }
+  .rank-btn.done .rank-dot { background: currentColor; }
+  .rank-label { font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .lock-icon { font-size: 9px; position: absolute; top: -6px; right: -2px; }
+
+  .rank-card { border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+  .rank-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; }
+  .rank-card-head .palier-label { font-family: 'Bebas Neue'; font-size: 11px; letter-spacing: 4px; margin-bottom: 4px; opacity: 0.7; }
+  .rank-card-head .rank-title { font-family: 'Bebas Neue'; font-size: 38px; letter-spacing: 4px; line-height: 1; }
+  .rank-card-head .rank-subtitle { font-family: 'Rajdhani'; font-size: 14px; color: #888; margin-top: 4px; font-style: italic; }
+  .validated-badge { border-radius: 4px; padding: 6px 12px; font-family: 'Bebas Neue'; font-size: 14px; letter-spacing: 2px; white-space: nowrap; }
+  .divider { height: 1px; margin-bottom: 20px; }
+
+  .locked-note { text-align: center; padding: 30px 10px; color: #666; font-family: 'Rajdhani'; font-size: 14px; }
+
+  .stat-row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .stat-box { flex: 1; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 12px; text-align: center; }
+  .stat-box .k { font-size: 10px; letter-spacing: 2px; color: #555; margin-bottom: 4px; }
+  .stat-box .v { font-family: 'Bebas Neue'; font-size: 20px; }
+  .objective-box { background: rgba(255,255,255,0.03); border-radius: 6px; padding: 16px; }
+  .objective-box .k { font-size: 10px; letter-spacing: 2px; color: #555; margin-bottom: 8px; }
+  .objective-box .v { font-family: 'Rajdhani'; font-size: 16px; font-weight: 600; color: #ddd; line-height: 1.5; }
+
+  .progress-wrap { margin-bottom: 20px; }
+  .progress-labels { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .progress-labels span:first-child { font-size: 10px; letter-spacing: 2px; color: #444; }
+  .progress-labels span:last-child { font-size: 10px; letter-spacing: 2px; }
+  .progress-track { height: 3px; background: #1a1a1a; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+  .complete-btn { border: none; cursor: pointer; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 3px; padding: 14px 36px; border-radius: 2px; transition: all 0.3s; text-transform: uppercase; width: 100%; }
+  .complete-btn:hover { transform: scale(1.03); filter: brightness(1.15); }
+  .next-rank-banner { width: 100%; text-align: center; padding: 14px; border-radius: 2px; font-family: 'Bebas Neue'; font-size: 18px; letter-spacing: 3px; opacity: 0.6; border: 1px solid; }
+
+  .fb-week-head { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .fb-week-head span:first-child { font-size: 10px; letter-spacing: 2px; color: #666; }
+  .fb-week-head span:last-child { font-size: 10px; letter-spacing: 2px; }
+  .streak-pips { display: flex; gap: 6px; margin-bottom: 4px; }
+  .streak-pip { flex: 1; height: 6px; border-radius: 3px; background: #1a1a1a; transition: all 0.3s; }
+  .streak-hint { font-size: 11px; color: #555; font-family: 'Rajdhani'; margin-bottom: 18px; }
+
+  .session-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .session-tab { flex: 1; padding: 10px; border-radius: 6px; cursor: pointer; border: 1px solid; font-family: 'Bebas Neue'; font-size: 16px; letter-spacing: 2px; position: relative; background: rgba(255,255,255,0.02); }
+  .session-tab .session-check { position: absolute; top: 4px; right: 6px; font-size: 10px; }
+
+  .exercise-panel { background: rgba(255,255,255,0.03); border-radius: 6px; padding: 14px; margin-bottom: 14px; }
+  .exercise-panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .exercise-panel-head .focus { flex: 1 1 auto; min-width: 0; }
+  .exercise-panel-head .focus { font-size: 11px; color: #777; font-family: 'Rajdhani'; font-style: italic; }
+  .exercise-panel-head .col-labels { display: flex; gap: 10px; font-size: 9.5px; color: #555; letter-spacing: 1px; }
+  .copy-targets-btn { flex: none; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; color: #ccc; font-family: 'Rajdhani'; font-size: 11px; font-weight: 600; padding: 5px 10px; cursor: pointer; white-space: nowrap; transition: background 0.15s ease, color 0.15s ease; }
+  .copy-targets-btn:hover { background: rgba(255,255,255,0.12); }
+  .copy-targets-btn.copied { background: rgba(76,175,80,0.15); border-color: rgba(76,175,80,0.4); color: #8fd19e; }
+
+  .exercise-row { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .exercise-row:last-child { border-bottom: none; }
+  .ex-name { font-family: 'Rajdhani'; font-size: 13.5px; font-weight: 600; color: #ccc; }
+  .ex-meta { font-family: 'Rajdhani'; font-size: 10.5px; color: #666; font-style: italic; margin-bottom: 8px; }
+  .set-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding-left: 4px; }
+  .set-row .set-label { font-family: 'Rajdhani'; font-size: 11.5px; color: #777; }
+  .set-inputs { display: flex; gap: 6px; align-items: center; }
+  .mini-readout { min-width: 56px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: #fff; font-family: 'Rajdhani'; font-size: 13px; font-weight: 600; padding: 5px 8px; text-align: center; }
+  .mini-readout.empty { color: #444; border-style: dashed; }
+  .mini-readout.error { border-color: #ef5350; background: rgba(239,83,80,0.1); }
+  .set-check { font-size: 12px; width: 14px; text-align: center; }
+  .ex-warning { font-size: 10px; color: #ef5350; margin-top: 2px; font-family: 'Rajdhani'; }
+
+  .session-result-banner { width: 100%; text-align: center; padding: 10px; border-radius: 4px; border: 1px solid; font-family: 'Bebas Neue'; font-size: 13px; letter-spacing: 1.5px; }
+
+  .paste-bar { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; margin-bottom: 24px; }
+  .paste-bar .paste-label { display: flex; align-items: center; gap: 6px; font-family: 'Bebas Neue'; font-size: 13px; letter-spacing: 2px; color: #999; margin-bottom: 10px; }
+  .paste-textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-family: 'Rajdhani'; font-size: 16px; padding: 10px 12px; resize: vertical; min-height: 44px; outline: none; }
+  .paste-textarea:focus-visible { border-color: rgba(255,255,255,0.4); }
+  .paste-textarea::placeholder { color: #4a4a4a; }
+  .paste-btn { width: 100%; margin-top: 10px; cursor: pointer; border: none; border-radius: 6px; font-family: 'Bebas Neue'; font-size: 14px; letter-spacing: 2px; padding: 11px; background: #fff; color: #0a0b0f; transition: filter 0.15s ease; }
+  .paste-btn:hover { filter: brightness(0.9); }
+  .paste-message { margin-top: 10px; font-family: 'Rajdhani'; font-size: 12px; line-height: 1.5; padding: 8px 10px; border-radius: 6px; }
+  .paste-message.ok { color: #8fd19e; background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3); }
+  .paste-message.err { color: #ef8a87; background: rgba(239,83,80,0.1); border: 1px solid rgba(239,83,80,0.3); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .content-anim { animation: fadeIn 0.35s ease; }
+  @keyframes rankUp { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+  .rank-title-anim { animation: rankUp 0.5s ease; }
+
+  @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes cardIn { 0% { opacity: 0; transform: scale(0.85) translateY(20px); } 60% { opacity: 1; transform: scale(1.03) translateY(0); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+  @keyframes badgePulse { 0%, 100% { box-shadow: 0 0 20px currentColor; } 50% { box-shadow: 0 0 40px currentColor; } }
+
+  .rankup-overlay { position: fixed; inset: 0; background: rgba(4,5,8,0.86); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; animation: overlayIn 0.25s ease; }
+  .rankup-card { max-width: 420px; width: 100%; max-height: 88vh; overflow-y: auto; border-radius: 14px; padding: 30px 24px; text-align: center; animation: cardIn 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+  .rankup-emoji { font-size: 40px; display: inline-block; border-radius: 50%; padding: 10px; margin-bottom: 10px; animation: badgePulse 1.8s ease-in-out infinite; }
+  .rankup-eyebrow { font-family: 'Bebas Neue'; font-size: 12px; letter-spacing: 4px; opacity: 0.65; margin-bottom: 6px; }
+  .rankup-title { font-family: 'Bebas Neue'; font-size: 36px; letter-spacing: 3px; text-wrap: balance; }
+  .rankup-stats { display: flex; flex-direction: column; gap: 9px; margin: 20px 0; text-align: left; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 14px 16px; }
+  .rankup-stat-row { display: flex; justify-content: space-between; gap: 10px; font-family: 'Rajdhani'; font-size: 12.5px; }
+  .rankup-stat-row .k { color: #777; flex: none; }
+  .rankup-stat-row .v { color: #eee; font-weight: 600; text-align: right; }
+  .rankup-arrow { font-family: 'Bebas Neue'; font-size: 20px; opacity: 0.4; margin: 4px 0 14px; }
+  .rankup-next-label { font-family: 'Bebas Neue'; font-size: 10.5px; letter-spacing: 3px; color: #666; margin-bottom: 8px; }
+  .rankup-next-title { font-family: 'Bebas Neue'; font-size: 24px; letter-spacing: 2px; margin-bottom: 10px; }
+  .rankup-objective { font-family: 'Rajdhani'; font-size: 13.5px; line-height: 1.6; text-align: left; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px 14px; }
+  .rankup-strike { text-decoration: line-through; color: #666; margin-right: 7px; }
+  .rankup-new-value { font-weight: 700; }
+  .rankup-adj-list { text-align: left; margin-top: 4px; display: flex; flex-direction: column; gap: 6px; font-family: 'Rajdhani'; font-size: 12.5px; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px 14px; }
+  .rankup-adj-row { display: flex; justify-content: space-between; gap: 8px; }
+  .rankup-adj-row .name { color: #bbb; }
+  .rankup-continue-btn { margin-top: 22px; width: 100%; padding: 13px; border: none; border-radius: 7px; cursor: pointer; font-family: 'Bebas Neue'; font-size: 15px; letter-spacing: 2px; }
+  .rankup-continue-btn:hover { filter: brightness(1.1); }
+
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+</style>
+
+<div id="app">
+  <div class="glow-bg" id="glowBg"></div>
+  <div class="shell" id="shell"></div>
+  <div id="rankupModalRoot"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_PREFIX = "rankup2_";
+
+  var RANKS = [
+    { id: "iron", name: "IRON", emoji: "🩶", color: "#8a9bb0", bg: "#1a2030", accent: "#b0bec5", glow: "rgba(138,155,176,0.3)" },
+    { id: "bronze", name: "BRONZE", emoji: "🟤", color: "#cd7f32", bg: "#1e1610", accent: "#e8a060", glow: "rgba(205,127,50,0.3)" },
+    { id: "silver", name: "SILVER", emoji: "🩶", color: "#c0c0c0", bg: "#1a1a1a", accent: "#e0e0e0", glow: "rgba(192,192,192,0.3)" },
+    { id: "gold", name: "GOLD", emoji: "🟡", color: "#ffd700", bg: "#1e1a00", accent: "#ffe55c", glow: "rgba(255,215,0,0.35)" },
+    { id: "platinum", name: "PLATINUM", emoji: "🟢", color: "#00c897", bg: "#001a14", accent: "#00ffbe", glow: "rgba(0,200,151,0.3)" },
+    { id: "diamond", name: "DIAMOND", emoji: "🔵", color: "#4fc3f7", bg: "#001220", accent: "#80d8ff", glow: "rgba(79,195,247,0.35)" },
+    { id: "ascendant", name: "ASCENDANT", emoji: "🔴", color: "#ef5350", bg: "#1a0000", accent: "#ff8a80", glow: "rgba(239,83,80,0.35)" },
+    { id: "immortal", name: "IMMORTAL", emoji: "🟠", color: "#ff7043", bg: "#1a0a00", accent: "#ffab91", glow: "rgba(255,112,67,0.35)" },
+    { id: "radiant", name: "RADIANT", emoji: "✨", color: "#ffe066", bg: "#1a1500", accent: "#fff176", glow: "rgba(255,224,102,0.5)" }
+  ];
+
+  // Each rank's real difficulty (distance target) is computed sequentially —
+  // deltaM/weeksBase below are the STANDARD step from the previous rank.
+  // The actual step applied is scaled by how fast the previous rank was
+  // really validated (see swimAdjustmentForRank), so someone who blows past
+  // Iron in a week gets a harder Bronze, and someone who struggles gets an
+  // easier next step instead of stalling forever. deltaM: 0 marks a
+  // technique-only checkpoint (distance stays flat, skill note carries the
+  // difficulty) and is never scaled.
+  var SWIM_RANK_DEFS = [
+    { label: "Je prends mes marques", freq: "1x/semaine", duration: "30 min", deltaM: 200, skillNote: "sans s'arrêter — brasse", weeksBase: 4 },
+    { label: "Je tiens la distance", freq: "1x/semaine", duration: "35 min", deltaM: 300, skillNote: "en continu — brasse/crawl", weeksBase: 6 },
+    { label: "Je construis mon cardio", freq: "2x/semaine", duration: "40 min", deltaM: 500, skillNote: "avec pauses courtes", weeksBase: 8 },
+    { label: "Je nage vraiment", freq: "2x/semaine", duration: "45 min", deltaM: 0, skillNote: "sans pause + introduction du dos crawlé", weeksBase: 8 },
+    { label: "L'endurance s'installe", freq: "3x/semaine", duration: "50 min", deltaM: 500, skillNote: "+ alterner les 4 nages (papillon initiation)", weeksBase: 10 },
+    { label: "Je perfectionne", freq: "3x/semaine", duration: "55 min", deltaM: 500, skillNote: "+ intervalles de vitesse (sprints 50m)", weeksBase: 12 },
+    { label: "Je suis un nageur", freq: "4x/semaine", duration: "60 min", deltaM: 500, skillNote: "+ 4 nages maîtrisées + 100m crawl < 2min", weeksBase: 12 },
+    { label: "Niveau athlète amateur", freq: "4x/semaine", duration: "70 min", deltaM: 500, skillNote: "+ 100m crawl < 1min45 + enchaînements 4 nages", weeksBase: 16 },
+    { label: "La forme au sommet", freq: "4-5x/semaine", duration: "75 min", deltaM: 1000, skillNote: "+ 100m crawl < 1min30 + corps transformé", weeksBase: null }
+  ];
+
+  function formatDistanceLabel(m) {
+    if (m <= 1000) return (m / 50) + " longueurs (" + (m === 1000 ? "1km" : m + "m") + ")";
+    var km = m / 1000;
+    return (Number.isInteger(km) ? String(km) : km.toFixed(1).replace(".", ",")) + "km";
+  }
+
+  // Moderate, bidirectional pacing adjustment: validated a rank in a
+  // fraction of its estimated weeks → next step gets harder; took much
+  // longer → next step eases off so progression never stalls.
+  function paceAdjustment(ratio) {
+    if (ratio <= 0.5) return 0.25;
+    if (ratio <= 0.8) return 0.12;
+    if (ratio <= 1.2) return 0;
+    if (ratio <= 1.8) return -0.12;
+    return -0.25;
+  }
+
+  function swimAdjustmentForRank(rankIndex) {
+    var rankId = RANKS[rankIndex].id;
+    var unlockedAt = state.swimUnlockedAt[rankId];
+    var validatedAt = state.swimValidatedAt[rankId];
+    var weeksBase = SWIM_RANK_DEFS[rankIndex].weeksBase;
+    if (!unlockedAt || !validatedAt || !weeksBase) return 0;
+    var days = (new Date(validatedAt) - new Date(unlockedAt)) / 86400000;
+    if (!(days > 0)) return 0;
+    return paceAdjustment(days / (weeksBase * 7));
+  }
+
+  // adaptive=false recomputes the untouched baseline curve — used to show
+  // "standard vs adapted" comparisons in the rank-up modal.
+  function computeSwimPlan(adaptive) {
+    if (adaptive === undefined) adaptive = true;
+    var cumDistance = 0;
+    return RANKS.map(function (r, i) {
+      var def = SWIM_RANK_DEFS[i];
+      var delta = def.deltaM;
+      var adjPct = (adaptive && i > 0) ? swimAdjustmentForRank(i - 1) : 0;
+      if (delta > 0 && adjPct !== 0) {
+        var adjusted = Math.round((delta * (1 + adjPct)) / 50) * 50;
+        var floor = Math.round((delta * 0.3) / 50) * 50;
+        delta = Math.max(adjusted, floor);
+      }
+      cumDistance += delta;
+      var weeksEstimate = def.weeksBase === null ? null : Math.max(2, Math.round(def.weeksBase * (1 + adjPct)));
+      return {
+        label: def.label, freq: def.freq, duration: def.duration, weeks: weeksEstimate,
+        objective: formatDistanceLabel(cumDistance) + " " + def.skillNote,
+        adjusted: adjPct !== 0
+      };
+    });
+  }
+
+  // Each exercise "slot" now rotates through 3 tiers (ranks 0-2, 3-5, 6-8) —
+  // same muscle/movement pattern each time, but a different exercise/angle
+  // and rep range, so the program doesn't stay static from Iron to Radiant.
+  // machine/haltère/poulie priority (no barre) is kept in every tier.
+  // `match` = keyword groups recognizing ANY of a slot's 3 tier names in
+  // pasted text — someone might still log tier-1's exercise at a tier-3
+  // rank (different gym, habit, etc.) and it must still be recognized.
+  var FULLBODY_TEMPLATE = {
+    A: {
+      focus: "Pecs haut / Dos largeur / Épaules frontal",
+      slots: [
+        { muscle: "Pectoraux (haut)", match: [["inclin"]], tiers: [
+          { name: "Presse inclinée à la machine", targetReps: 10, base: 35, inc: 4 },
+          { name: "Écarté incliné à la poulie", targetReps: 12, base: 10, inc: 2 },
+          { name: "Développé incliné haltères", targetReps: 8, base: 16, inc: 2 }
+        ] },
+        { muscle: "Dos (largeur)", match: [["tirage", "vertical"], ["traction"]], tiers: [
+          { name: "Tirage vertical à la machine prise large", targetReps: 10, base: 35, inc: 5 },
+          { name: "Tirage vertical à la machine prise serrée neutre", targetReps: 10, base: 40, inc: 5 },
+          { name: "Traction assistée à la machine", targetReps: 8, base: 25, inc: -4, assisted: true }
+        ] },
+        { muscle: "Biceps", match: [["curl"]], tiers: [
+          { name: "Curl au pupitre à la machine", targetReps: 10, base: 18, inc: 2 },
+          { name: "Curl à la poulie basse", targetReps: 10, base: 14, inc: 1.5 },
+          { name: "Curl haltères alterné assis", targetReps: 10, base: 10, inc: 1 }
+        ] },
+        { muscle: "Pectoraux / Triceps", match: [["presse", "assist"], ["developpe", "convergent"], ["developpe", "decline"]], tiers: [
+          { name: "Presse assistée", targetReps: 12, base: 60, inc: -5, assisted: true },
+          { name: "Développé convergent à la machine", targetReps: 10, base: 30, inc: 4 },
+          { name: "Développé décliné à la machine", targetReps: 10, base: 34, inc: 4 }
+        ] },
+        { muscle: "Triceps", match: [["extension", "triceps"]], tiers: [
+          { name: "Extension triceps avec corde à la poulie haute", targetReps: 12, base: 15, inc: 2 },
+          { name: "Extension triceps à la machine", targetReps: 12, base: 20, inc: 2.5 },
+          { name: "Extension triceps haltère au-dessus de la tête", targetReps: 10, base: 12, inc: 1.5 }
+        ] },
+        { muscle: "Épaules (frontal)", match: [["presse", "epaule"], ["elevation", "frontal"], ["developpe", "militaire"]], tiers: [
+          { name: "Presse épaule à la machine", targetReps: 10, base: 28, inc: 3 },
+          { name: "Élévations frontales à la poulie", targetReps: 12, base: 8, inc: 1 },
+          { name: "Développé militaire haltères", targetReps: 8, base: 12, inc: 1.5 }
+        ] }
+      ]
+    },
+    B: {
+      focus: "Pecs milieu / Dos épaisseur / Épaules latéral",
+      slots: [
+        { muscle: "Pectoraux (milieu)", match: [["pec", "deck"], ["peckfly"], ["pecfly"], ["butterfly"], ["developpe", "plat"], ["ecart", "couche"]], tiers: [
+          { name: "Pec Deck / Butterfly", targetReps: 12, base: 35, inc: 4 },
+          { name: "Développé à plat à la machine", targetReps: 10, base: 32, inc: 4 },
+          { name: "Écarté couché haltères", targetReps: 10, base: 14, inc: 1.5 }
+        ] },
+        { muscle: "Dos (épaisseur)", match: [["rowing"], ["tirage", "horizontal"]], tiers: [
+          { name: "Rowing machine", targetReps: 10, base: 35, inc: 5 },
+          { name: "Tirage horizontal à la poulie basse", targetReps: 10, base: 38, inc: 5 },
+          { name: "Rowing haltère unilatéral", targetReps: 10, base: 18, inc: 2 }
+        ] },
+        { muscle: "Épaules (latéral)", match: [["elevation", "later"]], tiers: [
+          { name: "Élévation latérale machine", targetReps: 12, base: 15, inc: 2 },
+          { name: "Élévation latérale à la poulie", targetReps: 12, base: 6, inc: 1 },
+          { name: "Élévation latérale haltères", targetReps: 12, base: 7, inc: 1 }
+        ] },
+        { muscle: "Biceps", match: [["curl", "poulie"], ["curl", "marteau"], ["curl", "pupitre"]], tiers: [
+          { name: "Curl à la poulie barre", targetReps: 10, base: 12, inc: 1.5 },
+          { name: "Curl marteau haltères", targetReps: 10, base: 10, inc: 1.5 },
+          { name: "Curl pupitre à la machine", targetReps: 10, base: 16, inc: 2 }
+        ] },
+        { muscle: "Triceps", match: [["dips"], ["extension", "triceps"], ["kickback"]], tiers: [
+          { name: "Dips machine assistée", targetReps: 10, base: 25, inc: -3, assisted: true },
+          { name: "Extension triceps à la poulie (prise inversée)", targetReps: 12, base: 12, inc: 1.5 },
+          { name: "Kickback triceps haltère", targetReps: 10, base: 6, inc: 1 }
+        ] },
+        { muscle: "Jambes (ischio)", match: [["leg", "curl"], ["souleve"]], tiers: [
+          { name: "Leg Curl allongé", targetReps: 12, base: 25, inc: 3 },
+          { name: "Leg Curl assis à la machine", targetReps: 12, base: 32, inc: 4 },
+          { name: "Soulevé de terre jambes tendues haltères", targetReps: 10, base: 16, inc: 2 }
+        ] }
+      ]
+    },
+    C: {
+      focus: "Pecs bas / Dos grand rond / Épaules arrière",
+      slots: [
+        { muscle: "Pectoraux (bas)", match: [["developpe", "couche"], ["ecart", "decline"], ["bench"]], tiers: [
+          { name: "Développé couché machine", targetReps: 10, base: 40, inc: 4 },
+          { name: "Écarté décliné à la poulie", targetReps: 12, base: 9, inc: 1 },
+          { name: "Développé couché haltères", targetReps: 8, base: 18, inc: 2 }
+        ] },
+        { muscle: "Dos (grand rond)", match: [["tirage"], ["rowing"]], tiers: [
+          { name: "Tirage horizontal machine", targetReps: 10, base: 35, inc: 5 },
+          { name: "Tirage vertical prise serrée à la poulie", targetReps: 10, base: 38, inc: 5 },
+          { name: "Rowing buste penché haltères", targetReps: 10, base: 16, inc: 2 }
+        ] },
+        { muscle: "Épaules (arrière)", match: [["elevation", "arrier"], ["oiseau"]], tiers: [
+          { name: "Élévation arrière câble", targetReps: 15, base: 3, inc: 1 },
+          { name: "Oiseau à la machine", targetReps: 15, base: 18, inc: 2 },
+          { name: "Oiseau haltères", targetReps: 12, base: 5, inc: 0.5 }
+        ] },
+        { muscle: "Biceps", match: [["curl"]], tiers: [
+          { name: "Curl assis haltères", targetReps: 10, base: 10, inc: 1 },
+          { name: "Curl à la machine prise supination", targetReps: 10, base: 14, inc: 1.5 },
+          { name: "Curl à la poulie basse prise large", targetReps: 10, base: 10, inc: 1.5 }
+        ] },
+        { muscle: "Triceps", match: [["extension", "triceps"]], tiers: [
+          { name: "Extension triceps poulie", targetReps: 12, base: 15, inc: 2 },
+          { name: "Extension triceps à la machine (prise serrée)", targetReps: 12, base: 22, inc: 2.5 },
+          { name: "Extension triceps haltère buste penché", targetReps: 10, base: 6, inc: 1 }
+        ] },
+        { muscle: "Jambes (quadriceps)", match: [["leg", "extension"], ["presse", "cuisse"], ["fente"]], tiers: [
+          { name: "Leg Extension", targetReps: 12, base: 30, inc: 5 },
+          { name: "Presse à cuisses", targetReps: 12, base: 70, inc: 10 },
+          { name: "Fentes haltères", targetReps: 10, base: 10, inc: 1.5 }
+        ] },
+        { muscle: "Mollets", match: [["mollet"]], tiers: [
+          { name: "Mollets assis à la machine", targetReps: 15, base: 20, inc: 5 },
+          { name: "Mollets debout à la machine", targetReps: 15, base: 35, inc: 5 },
+          { name: "Mollets haltères unilatéral", targetReps: 12, base: 14, inc: 1.5 }
+        ] }
+      ]
+    }
+  };
+
+  function tierIndexForRank(rankIndex) { return Math.min(2, Math.floor(rankIndex / 3)); }
+
+  // Weights are walked up sequentially rank by rank rather than computed by
+  // a flat formula, because each step from rank i-1 to i can be scaled by
+  // that exercise's stored adjustment (see computeNextAdjustments). At a
+  // tier boundary (new exercise for the slot) the walk resets to that
+  // tier's own base rather than continuing the old exercise's numbers,
+  // since the two movements aren't on the same load scale.
+  function fullBodySessionsForRank(rankIndex) {
+    var weights = {};
+    ["A", "B", "C"].forEach(function (letter) {
+      FULLBODY_TEMPLATE[letter].slots.forEach(function (slot, idx) {
+        weights[letter + "-" + idx] = slot.tiers[0].base;
+      });
+    });
+    for (var i = 1; i <= rankIndex; i++) {
+      var prevTier = tierIndexForRank(i - 1);
+      var curTier = tierIndexForRank(i);
+      var prevState = state.fbState[RANKS[i - 1].id];
+      var adjustments = (prevState && prevState.nextAdjustments) || {};
+      ["A", "B", "C"].forEach(function (letter) {
+        FULLBODY_TEMPLATE[letter].slots.forEach(function (slot, idx) {
+          var key = letter + "-" + idx;
+          var pct = adjustments[key] || 0;
+          if (curTier !== prevTier) {
+            weights[key] = slot.tiers[curTier].base * (1 + pct);
+          } else {
+            var tier = slot.tiers[curTier];
+            var inc = tier.inc * (1 + pct);
+            if (Math.abs(inc) < Math.abs(tier.inc) * 0.3) inc = tier.inc * 0.3;
+            weights[key] += inc;
+          }
+        });
+      });
+    }
+    var tierNow = tierIndexForRank(rankIndex);
+    var out = {};
+    ["A", "B", "C"].forEach(function (letter) {
+      out[letter] = {
+        focus: FULLBODY_TEMPLATE[letter].focus,
+        exercises: FULLBODY_TEMPLATE[letter].slots.map(function (slot, idx) {
+          var tier = slot.tiers[tierNow];
+          var w = weights[letter + "-" + idx];
+          if (w < 0) w = 0;
+          w = Math.round(w * 2) / 2;
+          var adjustedFromPrev = rankIndex > 0 && state.fbState[RANKS[rankIndex - 1].id] && state.fbState[RANKS[rankIndex - 1].id].nextAdjustments && state.fbState[RANKS[rankIndex - 1].id].nextAdjustments[letter + "-" + idx];
+          return { name: tier.name, muscle: slot.muscle, sets: 3, targetReps: tier.targetReps, targetWeight: w, assisted: !!tier.assisted, match: slot.match, adjusted: !!adjustedFromPrev };
+        })
+      };
+    });
+    return out;
+  }
+
+  // The untouched flat base+inc*(rank-within-tier) formula, ignoring any
+  // stored adjustments — used only to show "standard vs adapted" in the
+  // rank-up modal.
+  function fullBodySessionsStandard(rankIndex) {
+    var tierNow = tierIndexForRank(rankIndex);
+    var localIdx = rankIndex - tierNow * 3;
+    var out = {};
+    ["A", "B", "C"].forEach(function (letter) {
+      out[letter] = {
+        focus: FULLBODY_TEMPLATE[letter].focus,
+        exercises: FULLBODY_TEMPLATE[letter].slots.map(function (slot) {
+          var tier = slot.tiers[tierNow];
+          var w = tier.base + tier.inc * localIdx;
+          if (w < 0) w = 0;
+          w = Math.round(w * 2) / 2;
+          return { name: tier.name, targetWeight: w, assisted: !!tier.assisted };
+        })
+      };
+    });
+    return out;
+  }
+
+  function computeOvershoot(ex, setLog) {
+    return ex.assisted ? (ex.targetWeight - Math.abs(setLog.weight)) / ex.targetWeight : (setLog.weight - ex.targetWeight) / ex.targetWeight;
+  }
+  function adjPctFromOvershoot(avgOvershoot) {
+    if (avgOvershoot >= 0.3) return 0.25;
+    if (avgOvershoot >= 0.15) return 0.12;
+    return 0;
+  }
+  function adjPctFromWeeksAttempted(weeksAttempted) {
+    var ratio = (weeksAttempted || 3) / 3;
+    if (ratio <= 1.3) return 0;
+    if (ratio <= 2) return -0.12;
+    return -0.25;
+  }
+
+  // Estimated weeks to validate a rank, predicted from how long the
+  // PREVIOUS rank actually took (3 is the hard floor — you can't validate
+  // faster than 3 consecutive clean weeks). Fixed once the rank is entered,
+  // same pattern as swim's weeksBase.
+  function fbWeeksEstimate(rankIndex) {
+    if (rankIndex <= 0) return 4;
+    var prev = state.fbState[RANKS[rankIndex - 1].id];
+    var weeksAttempted = prev && prev.weeksAttempted;
+    if (!weeksAttempted) return 4;
+    var ratio = weeksAttempted / 3;
+    if (ratio <= 1.3) return 4;
+    if (ratio <= 2) return 5;
+    if (ratio <= 3) return 6;
+    return 7;
+  }
+
+  // A demoted rank's targets are eased further and FROZEN — re-validating
+  // the rank below it (which is likely quick, since it was already
+  // conquered once) must not silently re-harden the targets that were just
+  // proven too tough.
+  function easeAdjustmentsForDemotion(baseAdjustments) {
+    var out = {};
+    Object.keys(baseAdjustments || {}).forEach(function (k) {
+      out[k] = Math.max(-0.3, (baseAdjustments[k] || 0) - 0.15);
+    });
+    return out;
+  }
+
+  // Called once a rank's 3 A+B+C weeks are validated: per exercise, how much
+  // margin was there over target (→ harden next rank) blended with a global
+  // penalty if it took many calendar weeks to get there (→ ease next rank).
+  // Result is stored on the just-validated rank and consumed by
+  // fullBodySessionsForRank when it builds the NEXT rank's targets.
+  function computeNextAdjustments(rankIndex, sessionDefs, sessions, weeksAttempted) {
+    var globalEase = adjPctFromWeeksAttempted(weeksAttempted);
+    var out = {};
+    ["A", "B", "C"].forEach(function (letter) {
+      var def = sessionDefs[letter];
+      var sess = sessions[letter];
+      def.exercises.forEach(function (ex, idx) {
+        var setLogs = (sess && sess.log && sess.log[idx] && sess.log[idx].sets) || [];
+        var pct = globalEase;
+        if (setLogs.length) {
+          var avgOvershoot = setLogs.reduce(function (sum, sl) { return sum + computeOvershoot(ex, sl); }, 0) / setLogs.length;
+          pct = adjPctFromOvershoot(avgOvershoot) + globalEase;
+        }
+        out[letter + "-" + idx] = Math.max(-0.3, Math.min(0.3, pct));
+      });
+    });
+    return out;
+  }
+
+  // ---------- date helpers ----------
+
+  function weekKey(d) {
+    var date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var day = date.getDay();
+    var diff = day === 0 ? -6 : 1 - day;
+    date.setDate(date.getDate() + diff);
+    var y = date.getFullYear();
+    var m = String(date.getMonth() + 1).padStart(2, "0");
+    var dd = String(date.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + dd;
+  }
+
+  function formatWeekLabel(key) {
+    var parts = key.split("-").map(Number);
+    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    return d.toLocaleDateString("fr-BE", { day: "2-digit", month: "short" });
+  }
+
+  function weekKeyTime(key) {
+    var parts = key.split("-").map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+  }
+
+  function formatDateLong(iso) {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString("fr-BE", { day: "numeric", month: "long", year: "numeric" });
+  }
+
+  function formatDuration(days) {
+    if (days === null || days === undefined || isNaN(days)) return "—";
+    if (days < 7) return days + (days <= 1 ? " jour" : " jours");
+    var weeks = Math.floor(days / 7);
+    var rem = days % 7;
+    return weeks + (weeks <= 1 ? " semaine" : " semaines") + (rem ? " " + rem + "j" : "");
+  }
+
+  var MONTHS_FR_LIST = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+  function formatPasteDate(d) {
+    var hh = String(d.getHours()).padStart(2, "0");
+    var mm = String(d.getMinutes()).padStart(2, "0");
+    return d.getDate() + " " + MONTHS_FR_LIST[d.getMonth()] + " " + d.getFullYear() + " à " + hh + ":" + mm;
+  }
+
+  // Builds the session's TARGET reps/weight in the exact text shape the
+  // paste-import parser reads — so it can be copied straight into another
+  // app (or handed to that app's own assistant) to set up the workout.
+  function buildCopyText(rank, letter, sessionDef) {
+    var lines = [rank.name + " - FULL BODY " + letter, formatPasteDate(new Date()), ""];
+    sessionDef.exercises.forEach(function (ex) {
+      lines.push(ex.name);
+      for (var i = 1; i <= 3; i++) {
+        lines.push(i + ": " + ex.targetReps + " répétitions x " + (ex.assisted ? "-" : "") + ex.targetWeight + " kg");
+      }
+      lines.push("");
+    });
+    return lines.join("\n").trim();
+  }
+
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        ok ? resolve() : reject(new Error("execCommand copy failed"));
+      } catch (e) { reject(e); }
+    });
+  }
+
+  function daysBetween(startISO, endISO) {
+    if (!startISO || !endISO) return null;
+    return Math.max(0, Math.round((new Date(endISO) - new Date(startISO)) / 86400000));
+  }
+
+  // ---------- validation ----------
+
+  function evaluateSet(ex, reps, weight) {
+    if (reps === null || reps === undefined || isNaN(reps)) return false;
+    if (weight === null || weight === undefined || isNaN(weight)) return false;
+    var okReps = reps >= ex.targetReps;
+    var okWeight = ex.assisted ? Math.abs(weight) <= ex.targetWeight : weight >= ex.targetWeight;
+    return okReps && okWeight;
+  }
+
+  function evaluateSessionSuccess(sessionDef, session) {
+    if (!session || !session.locked || !session.log) return false;
+    return sessionDef.exercises.every(function (ex, i) {
+      var exLog = session.log[i];
+      if (!exLog || !exLog.sets) return false;
+      return exLog.sets.every(function (sl) { return evaluateSet(ex, sl.reps, sl.weight); });
+    });
+  }
+
+  function emptySession() { return { locked: false, log: null }; }
+
+  // ---------- storage ----------
+
+  function loadJSON(key, fallback) {
+    try {
+      var raw = localStorage.getItem(STORAGE_PREFIX + key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) { return fallback; }
+  }
+  function saveJSON(key, value) {
+    try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); } catch (e) { /* best effort */ }
+  }
+
+  // ---------- state (blank start — no seeded progress) ----------
+
+  var state = {
+    tab: loadJSON("activeTab", "swim"),
+    swimCompleted: loadJSON("swimCompleted", {}),
+    swimUnlockedAt: loadJSON("swimUnlockedAt", {}),
+    swimValidatedAt: loadJSON("swimValidatedAt", {}),
+    fbUnlockedAt: loadJSON("fbUnlockedAt", {}),
+    fbValidatedAt: loadJSON("fbValidatedAt", {}),
+    fbState: loadJSON("fbState", {})
+  };
+
+  // Bootstrap: Iron's clocks start the first time the app is ever opened,
+  // so the very first pace measurement has something to compare to.
+  if (!state.swimUnlockedAt.iron) {
+    state.swimUnlockedAt = Object.assign({}, state.swimUnlockedAt, { iron: new Date().toISOString() });
+    saveJSON("swimUnlockedAt", state.swimUnlockedAt);
+  }
+  if (!state.fbUnlockedAt.iron) {
+    state.fbUnlockedAt = Object.assign({}, state.fbUnlockedAt, { iron: new Date().toISOString() });
+    saveJSON("fbUnlockedAt", state.fbUnlockedAt);
+  }
+
+  function firstUnvalidated(tab) {
+    for (var i = 0; i < RANKS.length; i++) {
+      var r = RANKS[i];
+      var done = tab === "swim" ? !!state.swimCompleted[r.id] : !!(state.fbState[r.id] && state.fbState[r.id].validated);
+      if (!done) return r.id;
+    }
+    return RANKS[RANKS.length - 1].id;
+  }
+
+  var ui = { selectedRank: firstUnvalidated(state.tab), fbSession: "A", pasteDraft: "", pasteMessage: "", pasteOk: false, rankUpModal: null };
+
+  function fbUnlockedIndex() {
+    var idx = 0;
+    for (var i = 0; i < RANKS.length; i++) {
+      if (state.fbState[RANKS[i].id] && state.fbState[RANKS[i].id].validated) idx = i + 1;
+      else break;
+    }
+    return Math.min(idx, RANKS.length - 1);
+  }
+
+  var DEMOTION_FAIL_THRESHOLD = 3;
+
+  function getFreshRankState(rankId) {
+    var existing = state.fbState[rankId];
+    var currentWeekKey = weekKey(new Date());
+    if (!existing) {
+      return { validated: false, streak: 0, consecutiveFails: 0, weeksAttempted: 0, currentWeekKey: currentWeekKey, sessions: { A: emptySession(), B: emptySession(), C: emptySession() } };
+    }
+    if (existing.validated) return existing;
+    if (existing.currentWeekKey !== currentWeekKey) {
+      var rankIndex = RANKS.findIndex(function (r) { return r.id === rankId; });
+      var sessionDefs = fullBodySessionsForRank(rankIndex);
+      var allDoneLastWeek = ["A", "B", "C"].every(function (l) { return evaluateSessionSuccess(sessionDefs[l], existing.sessions[l]); });
+      var newStreak = allDoneLastWeek ? Math.min(existing.streak + 1, 3) : 0;
+      var newConsecutiveFails = allDoneLastWeek ? 0 : (existing.consecutiveFails || 0) + 1;
+      var weeksElapsed = Math.max(1, Math.round((weekKeyTime(currentWeekKey) - weekKeyTime(existing.currentWeekKey)) / (7 * 86400000)));
+      var weeksAttempted = (existing.weeksAttempted || 0) + weeksElapsed;
+      var result;
+
+      if (allDoneLastWeek && newStreak >= 3) {
+        var nextAdjustments = existing.frozenAdjustments ? existing.nextAdjustments : computeNextAdjustments(rankIndex, sessionDefs, existing.sessions, weeksAttempted);
+        result = Object.assign({}, existing, { validated: true, streak: 3, consecutiveFails: 0, weeksAttempted: weeksAttempted, nextAdjustments: nextAdjustments });
+        commitFbState(rankId, result);
+      } else if (rankIndex > 0 && weeksAttempted > fbWeeksEstimate(rankIndex) && newConsecutiveFails >= DEMOTION_FAIL_THRESHOLD) {
+        var prevId = RANKS[rankIndex - 1].id;
+        var prevState = state.fbState[prevId];
+        var easedAdjustments = easeAdjustmentsForDemotion(prevState && prevState.nextAdjustments);
+        commitFbState(prevId, {
+          validated: false, streak: 0, consecutiveFails: 0, weeksAttempted: 0, currentWeekKey: currentWeekKey,
+          sessions: { A: emptySession(), B: emptySession(), C: emptySession() },
+          nextAdjustments: easedAdjustments, frozenAdjustments: true
+        });
+        result = { validated: false, streak: 0, consecutiveFails: 0, weeksAttempted: 0, currentWeekKey: currentWeekKey, sessions: { A: emptySession(), B: emptySession(), C: emptySession() } };
+        commitFbState(rankId, result);
+        state.fbUnlockedAt = Object.assign({}, state.fbUnlockedAt);
+        delete state.fbUnlockedAt[rankId];
+        saveJSON("fbUnlockedAt", state.fbUnlockedAt);
+        ui.rankUpModal = {
+          kind: "gym-demote", rank: RANKS[rankIndex], prevRank: RANKS[rankIndex - 1],
+          weeksAttempted: weeksAttempted, weeksEstimate: fbWeeksEstimate(rankIndex),
+          pendingSelect: prevId
+        };
+      } else {
+        result = { validated: false, streak: newStreak, consecutiveFails: newConsecutiveFails, weeksAttempted: weeksAttempted, currentWeekKey: currentWeekKey, sessions: { A: emptySession(), B: emptySession(), C: emptySession() } };
+        commitFbState(rankId, result);
+      }
+      return result;
+    }
+    return existing;
+  }
+
+  function commitFbState(rankId, newState) {
+    state.fbState = Object.assign({}, state.fbState, { [rankId]: newState });
+    saveJSON("fbState", state.fbState);
+  }
+
+  // ---------- paste import ----------
+  // The workout app the user logs sessions in exports plain text like:
+  //   IRON - FULL BODY A
+  //   12 août 2026 à 11:00
+  //
+  //   Durée : 42m
+  //   Volume : 7K kg
+  //   ...
+  //
+  //   Presse inclinée à la machine
+  //   1: 17 répétitions x 35 kg
+  //   2: 12 répétitions x 35 kg
+  //   3: 10 répétitions x 35 kg
+  // Pasting that text is now the only way to fill in a session — this
+  // normalizes names/accents so "Presse inclinée à la machine" matches the
+  // catalog regardless of minor casing/whitespace differences.
+  function normalize(s) {
+    return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/\s+/g, " ");
+  }
+
+  // True if every keyword of at least one group is a substring of the
+  // normalized name \u2014 lets "Pec Deck \u00e0 la machine" and "Butterfly" both
+  // resolve to the same catalog exercise, regardless of the tracking app's
+  // exact phrasing (see FULLBODY_TEMPLATE's `match` groups).
+  function matchesKeywordGroups(normalizedName, groups) {
+    if (!groups) return false;
+    return groups.some(function (group) {
+      return group.every(function (kw) { return normalizedName.indexOf(kw) !== -1; });
+    });
+  }
+
+  var MONTHS_FR = { janvier: 0, fevrier: 1, mars: 2, avril: 3, mai: 4, juin: 5, juillet: 6, aout: 7, septembre: 8, octobre: 9, novembre: 10, decembre: 11 };
+
+  function parseFrenchDate(line) {
+    var m = line.match(/(\d{1,2})\s+([a-zéûôàè]+)\s+(\d{4})(?:\s*(?:à|a)\s*(\d{1,2})[:h](\d{2}))?/i);
+    if (!m) return null;
+    var month = MONTHS_FR[normalize(m[2])];
+    if (month === undefined) return null;
+    return new Date(parseInt(m[3], 10), month, parseInt(m[1], 10), m[4] ? parseInt(m[4], 10) : 0, m[5] ? parseInt(m[5], 10) : 0);
+  }
+
+  function parseWorkoutPaste(text) {
+    var blocks = String(text || "").split(/\n\s*\n/).map(function (b) { return b.trim(); }).filter(Boolean);
+    if (!blocks.length) return { error: "Colle le texte de ta séance avant d'analyser." };
+
+    var headerLines = blocks[0].split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+    var titleMatch = headerLines[0] && headerLines[0].match(/^([A-Za-z\u00C0-\u00FF]+)\s*-\s*FULL BODY\s*([ABC])\s*$/i);
+    if (!titleMatch) return { error: 'Ligne d\'en-tête introuvable. Format attendu : "RANG - FULL BODY A".' };
+
+    var rankObj = RANKS.find(function (r) { return normalize(r.name) === normalize(titleMatch[1]); });
+    if (!rankObj) return { error: 'Rang "' + titleMatch[1] + '" non reconnu.' };
+    var sessionLetter = titleMatch[2].toUpperCase();
+
+    var date = headerLines[1] ? parseFrenchDate(headerLines[1]) : null;
+
+    var setLineRe = /^\d+\s*:\s*(\d+(?:[.,]\d+)?)\s*r[ée]p[ée]titions?\s*x\s*(-?\d+(?:[.,]\d+)?)\s*kg/i;
+    var exerciseBlocks = [];
+    for (var i = 1; i < blocks.length; i++) {
+      var lines = blocks[i].split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+      if (lines.length < 2) continue;
+      var sets = [];
+      for (var j = 1; j < lines.length; j++) {
+        var sm = lines[j].match(setLineRe);
+        if (sm) sets.push({ reps: parseFloat(sm[1].replace(",", ".")), weight: parseFloat(sm[2].replace(",", ".")) });
+      }
+      if (sets.length) exerciseBlocks.push({ name: lines[0], sets: sets });
+    }
+    if (!exerciseBlocks.length) return { error: "Aucun exercice reconnu dans le texte collé." };
+
+    return { rankId: rankObj.id, sessionLetter: sessionLetter, date: date, exerciseBlocks: exerciseBlocks };
+  }
+
+  function applyPastedSession(text) {
+    var parsed = parseWorkoutPaste(text);
+    if (parsed.error) return { ok: false, message: parsed.error };
+
+    var rankIndex = RANKS.findIndex(function (r) { return r.id === parsed.rankId; });
+    if (rankIndex > fbUnlockedIndex()) return { ok: false, message: "Le rang " + RANKS[rankIndex].name + " n'est pas encore débloqué en Full Body." };
+
+    var current = getFreshRankState(parsed.rankId);
+    if (current.sessions[parsed.sessionLetter].locked) {
+      return { ok: false, message: "La séance " + parsed.sessionLetter + " de " + RANKS[rankIndex].name + " est déjà enregistrée et verrouillée." };
+    }
+
+    var sessionDefs = fullBodySessionsForRank(rankIndex);
+    var sessionDef = sessionDefs[parsed.sessionLetter];
+    var blocksByName = parsed.exerciseBlocks.map(function (b) { return { norm: normalize(b.name), sets: b.sets }; });
+
+    var problems = [];
+    var log = sessionDef.exercises.map(function (ex) {
+      var match = blocksByName.find(function (b) { return matchesKeywordGroups(b.norm, ex.match); });
+      var expected = ex.sets || 3;
+      if (!match) { problems.push(ex.name + " — absent du texte collé"); return null; }
+      if (match.sets.length !== expected) { problems.push(ex.name + " — " + match.sets.length + " série(s) collée(s) au lieu de " + expected); return null; }
+      var setLogs = match.sets.map(function (s) { return { reps: s.reps, weight: s.weight, passed: evaluateSet(ex, s.reps, s.weight) }; });
+      return { sets: setLogs, passed: setLogs.every(function (sl) { return sl.passed; }) };
+    });
+    if (problems.length) return { ok: false, message: "Import impossible : " + problems.join(" · ") + "." };
+
+    var newSessions = Object.assign({}, current.sessions, { [parsed.sessionLetter]: { locked: true, log: log, loggedAt: (parsed.date || new Date()).toISOString() } });
+    var newState = Object.assign({}, current, { sessions: newSessions });
+
+    var allThreeDone = ["A", "B", "C"].every(function (l) { return newSessions[l] && newSessions[l].locked; });
+    var allThreeSuccess = ["A", "B", "C"].every(function (l) { return evaluateSessionSuccess(sessionDefs[l], newSessions[l]); });
+    var justValidated = false;
+    if (allThreeDone && allThreeSuccess) {
+      var newStreak = Math.min(current.streak + 1, 3);
+      if (newStreak >= 3) {
+        var weeksAttemptedForCalc = (current.weeksAttempted || 0) + 1;
+        var nextAdjustments = current.frozenAdjustments ? current.nextAdjustments : computeNextAdjustments(rankIndex, sessionDefs, newSessions, weeksAttemptedForCalc);
+        newState = Object.assign({}, newState, { streak: 3, consecutiveFails: 0, validated: true, weeksAttempted: weeksAttemptedForCalc, nextAdjustments: nextAdjustments });
+        justValidated = true;
+      } else { newState = Object.assign({}, newState, { streak: newStreak }); }
+    }
+
+    commitFbState(parsed.rankId, newState);
+    ui.selectedRank = parsed.rankId;
+    ui.fbSession = parsed.sessionLetter;
+
+    if (justValidated) {
+      var now = new Date().toISOString();
+      var startISO = state.fbUnlockedAt[parsed.rankId];
+      state.fbValidatedAt = Object.assign({}, state.fbValidatedAt, { [parsed.rankId]: now });
+      saveJSON("fbValidatedAt", state.fbValidatedAt);
+
+      var nextIndex = rankIndex < RANKS.length - 1 ? rankIndex + 1 : null;
+      var nextId = nextIndex !== null ? RANKS[nextIndex].id : null;
+      if (nextId && !state.fbUnlockedAt[nextId]) {
+        state.fbUnlockedAt = Object.assign({}, state.fbUnlockedAt, { [nextId]: now });
+        saveJSON("fbUnlockedAt", state.fbUnlockedAt);
+      }
+
+      var adjustedList = [];
+      if (nextIndex !== null) {
+        var standardDefs = fullBodySessionsStandard(nextIndex);
+        var adaptiveDefs = fullBodySessionsForRank(nextIndex);
+        ["A", "B", "C"].forEach(function (letter) {
+          standardDefs[letter].exercises.forEach(function (sEx, idx) {
+            var aEx = adaptiveDefs[letter].exercises[idx];
+            if (aEx.targetWeight !== sEx.targetWeight) {
+              adjustedList.push({ name: sEx.name, standard: sEx.targetWeight, adapted: aEx.targetWeight, assisted: !!sEx.assisted });
+            }
+          });
+        });
+      }
+
+      ui.rankUpModal = {
+        kind: "gym",
+        rank: RANKS[rankIndex],
+        startDate: formatDateLong(startISO),
+        duration: formatDuration(daysBetween(startISO, now)),
+        nextRank: nextIndex !== null ? RANKS[nextIndex] : null,
+        adjustedList: adjustedList,
+        pendingSelect: nextId
+      };
+    }
+
+    var success = evaluateSessionSuccess(sessionDef, newSessions[parsed.sessionLetter]);
+    return { ok: true, message: "Séance " + parsed.sessionLetter + " (" + RANKS[rankIndex].name + ") importée — " + (success ? "réussie ✓" : "certains exercices n'ont pas atteint la cible.") };
+  }
+
+  function validateSwimRank(rankId) {
+    var rankIndex = RANKS.findIndex(function (r) { return r.id === rankId; });
+    var startISO = state.swimUnlockedAt[rankId];
+    var now = new Date().toISOString();
+
+    state.swimCompleted = Object.assign({}, state.swimCompleted, { [rankId]: true });
+    saveJSON("swimCompleted", state.swimCompleted);
+    state.swimValidatedAt = Object.assign({}, state.swimValidatedAt, { [rankId]: now });
+    saveJSON("swimValidatedAt", state.swimValidatedAt);
+
+    var nextId = rankIndex < RANKS.length - 1 ? RANKS[rankIndex + 1].id : null;
+    if (nextId && !state.swimUnlockedAt[nextId]) {
+      state.swimUnlockedAt = Object.assign({}, state.swimUnlockedAt, { [nextId]: now });
+      saveJSON("swimUnlockedAt", state.swimUnlockedAt);
+    }
+
+    var adaptivePlan = computeSwimPlan(true);
+    var standardPlan = computeSwimPlan(false);
+    var nextIndex = rankIndex < RANKS.length - 1 ? rankIndex + 1 : null;
+
+    ui.rankUpModal = {
+      kind: "swim",
+      rank: RANKS[rankIndex],
+      startDate: formatDateLong(startISO),
+      objectiveText: adaptivePlan[rankIndex].objective,
+      duration: formatDuration(daysBetween(startISO, now)),
+      nextRank: nextIndex !== null ? RANKS[nextIndex] : null,
+      nextObjectiveAdapted: nextIndex !== null ? adaptivePlan[nextIndex].objective : null,
+      nextObjectiveStandard: nextIndex !== null ? standardPlan[nextIndex].objective : null,
+      pendingSelect: nextId
+    };
+    render();
+  }
+
+  // ---------- rendering ----------
+
+  var shell = document.getElementById("shell");
+  var glowBg = document.getElementById("glowBg");
+  var appEl = document.getElementById("app");
+  var rankupModalRoot = document.getElementById("rankupModalRoot");
+
+  function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  function render() {
+    var rank = RANKS.find(function (r) { return r.id === ui.selectedRank; });
+    var rankIndex = RANKS.findIndex(function (r) { return r.id === ui.selectedRank; });
+
+    glowBg.style.background = "radial-gradient(circle, " + rank.glow + " 0%, transparent 70%)";
+
+    // Reconcile the selected rank's week/streak/adjustments before the rank
+    // rail below reads fbUnlockedIndex(), so a just-crossed week boundary
+    // (rank-up, streak reset) is reflected in this same render pass.
+    if (state.tab === "gym") getFreshRankState(ui.selectedRank);
+
+    var tabsHtml = [{ key: "swim", label: "🏊 NATATION" }, { key: "gym", label: "🔥 FULL BODY" }].map(function (t) {
+      var active = state.tab === t.key;
+      var style = active ? "color:" + rank.color + ";border-bottom-color:" + rank.color : "color:#444;border-bottom-color:transparent";
+      return '<button type="button" class="tab-btn' + (active ? " active" : "") + '" style="' + style + '" data-tab="' + t.key + '">' + t.label + "</button>";
+    }).join("");
+
+    var pasteBarHtml = "";
+    if (state.tab === "gym") {
+      pasteBarHtml =
+        '<div class="paste-bar">' +
+          '<div class="paste-label">🔍 COLLER UNE SÉANCE</div>' +
+          '<textarea id="pasteInput" class="paste-textarea" rows="3" placeholder="Colle ici l\'export complet d\'une séance (ex. &quot;IRON - FULL BODY A&quot; + date + exercices)…">' + esc(ui.pasteDraft) + "</textarea>" +
+          '<button type="button" id="parsePasteBtn" class="paste-btn">Analyser &amp; valider la séance</button>' +
+          (ui.pasteMessage ? '<div class="paste-message ' + (ui.pasteOk ? "ok" : "err") + '">' + esc(ui.pasteMessage) + "</div>" : "") +
+        "</div>";
+    }
+
+    var unlockedIdx = fbUnlockedIndex();
+    var rankSelectorHtml = RANKS.map(function (r, i) {
+      var locked = state.tab === "gym" && i > unlockedIdx;
+      var doneFlag = state.tab === "gym" ? (state.fbState[r.id] && state.fbState[r.id].validated) : state.swimCompleted[r.id];
+      var classes = ["rank-btn"];
+      if (ui.selectedRank === r.id) classes.push("active");
+      if (doneFlag) classes.push("done");
+      classes.push(locked ? "locked" : "unlocked");
+      return (
+        '<button type="button" class="' + classes.join(" ") + '" style="color:' + r.color + '" data-rank="' + r.id + '" ' + (locked ? 'aria-disabled="true"' : "") + ">" +
+          (locked ? '<span class="lock-icon">🔒</span>' : "") +
+          '<div class="rank-dot"></div>' +
+          '<span class="rank-label" style="color:' + (ui.selectedRank === r.id ? r.color : "#444") + '">' + r.name.slice(0, 3) + "</span>" +
+        "</button>"
+      );
+    }).join("");
+
+    var isDone = state.tab === "gym" ? (state.fbState[ui.selectedRank] && state.fbState[ui.selectedRank].validated) : state.swimCompleted[ui.selectedRank];
+
+    var cardHtml =
+      '<div key="' + state.tab + rank.id + '" class="rank-card content-anim" style="background:linear-gradient(135deg,' + rank.bg + ' 0%, #0d0e14 100%);border:1px solid ' + rank.color + '30;box-shadow:0 0 40px ' + rank.glow + '">' +
+        '<div class="rank-card-head">' +
+          "<div>" +
+            '<div class="palier-label" style="color:' + rank.color + '">PALIER ' + (rankIndex + 1) + " / " + RANKS.length + "</div>" +
+            '<div class="rank-title rank-title-anim" style="color:' + rank.color + '">' + rank.emoji + " " + rank.name + "</div>" +
+            '<div class="rank-subtitle">' + (state.tab === "gym" ? "Full Body — challenge hebdomadaire" : '"' + esc(computeSwimPlan()[rankIndex].label) + '"') + "</div>" +
+          "</div>" +
+          (isDone ? '<div class="validated-badge" style="background:' + rank.color + '20;border:1px solid ' + rank.color + ';color:' + rank.color + '">✓ VALIDÉ</div>' : "") +
+        "</div>" +
+        '<div class="divider" style="background:linear-gradient(90deg,' + rank.color + '40, transparent)"></div>' +
+        (state.tab === "gym" ? renderFullBody(rank, rankIndex) : renderSwim(rank, rankIndex)) +
+      "</div>";
+
+    var swimProgress = "";
+    if (state.tab === "swim") {
+      var doneCount = RANKS.filter(function (r) { return state.swimCompleted[r.id]; }).length;
+      swimProgress =
+        '<div class="progress-wrap">' +
+          '<div class="progress-labels"><span>PROGRESSION</span><span style="color:' + rank.color + '">' + doneCount + "/" + RANKS.length + "</span></div>" +
+          '<div class="progress-track"><div class="progress-fill" style="width:' + (doneCount / RANKS.length * 100) + "%;background:linear-gradient(90deg," + rank.color + "," + rank.accent + ");box-shadow:0 0 8px " + rank.glow + '"></div></div>' +
+        "</div>";
+    }
+
+    var footerHtml;
+    if (state.tab === "swim") {
+      footerHtml = !state.swimCompleted[ui.selectedRank]
+        ? '<button type="button" class="complete-btn" id="swimValidateBtn" style="background:linear-gradient(135deg,' + rank.color + "," + rank.accent + ");color:#0a0b0f;box-shadow:0 4px 20px " + rank.glow + '">✓ Valider ce palier</button>'
+        : '<div class="next-rank-banner" style="border-color:' + rank.color + '40;color:' + rank.color + '">' + (rankIndex < RANKS.length - 1 ? "→ PALIER SUIVANT DÉBLOQUÉ" : "🏆 RADIANT ATTEINT") + "</div>";
+    } else {
+      var unlockedNow = rankIndex <= unlockedIdx;
+      var validatedNow = state.fbState[ui.selectedRank] && state.fbState[ui.selectedRank].validated;
+      footerHtml = (unlockedNow && validatedNow)
+        ? '<div class="next-rank-banner" style="border-color:' + rank.color + '40;color:' + rank.color + '">' + (rankIndex < RANKS.length - 1 ? "→ PALIER SUIVANT DÉBLOQUÉ" : "🏆 RADIANT ATTEINT") + "</div>"
+        : "";
+    }
+
+    shell.innerHTML =
+      '<div class="app-header"><div class="eyebrow">PROGRESSION TRACKER</div><div class="title">RANK UP</div></div>' +
+      '<div class="tabs">' + tabsHtml + "</div>" +
+      pasteBarHtml +
+      '<div class="rank-selector">' + rankSelectorHtml + "</div>" +
+      cardHtml +
+      swimProgress +
+      footerHtml;
+
+    bindEvents(rank, rankIndex);
+    renderRankUpModal();
+  }
+
+  function renderRankUpModal() {
+    if (!ui.rankUpModal) { rankupModalRoot.innerHTML = ""; return; }
+    var m = ui.rankUpModal;
+
+    if (m.kind === "gym-demote") {
+      var tooHard = m.rank;
+      var landing = m.prevRank;
+      rankupModalRoot.innerHTML =
+        '<div class="rankup-overlay">' +
+          '<div class="rankup-card" style="background:linear-gradient(160deg,' + tooHard.bg + ' 0%, #0d0e14 100%);border:1px solid ' + tooHard.color + '40;box-shadow:0 0 70px ' + tooHard.glow + '">' +
+            '<div class="rankup-emoji" style="background:' + tooHard.color + '20;color:' + tooHard.color + '">' + tooHard.emoji + "</div>" +
+            '<div class="rankup-eyebrow" style="color:#ef8a87">RANG TROP DUR — ON RÉAJUSTE</div>' +
+            '<div class="rankup-title" style="color:' + tooHard.color + '">' + tooHard.name + "</div>" +
+            '<div class="rankup-stats">' +
+              '<div class="rankup-stat-row"><span class="k">Estimation</span><span class="v">' + m.weeksEstimate + " semaines</span></div>" +
+              '<div class="rankup-stat-row"><span class="k">Réellement tenté</span><span class="v">' + m.weeksAttempted + " semaines</span></div>" +
+            "</div>" +
+            '<div class="rankup-arrow">↓</div>' +
+            '<div class="rankup-next-label">TU REDESCENDS À</div>' +
+            '<div class="rankup-next-title" style="color:' + landing.color + '">' + landing.emoji + " " + landing.name + "</div>" +
+            '<div class="rankup-objective">Retente ' + landing.name + " pour reprendre ta progression. Les cibles de " + tooHard.name + " ont été allégées et resteront allégées à ton retour — ta vitesse pour re-valider " + landing.name + " ne les fera pas remonter.</div>" +
+            '<button type="button" class="rankup-continue-btn" id="rankupContinueBtn" style="background:' + tooHard.color + ';color:#0a0b0f">Continuer</button>' +
+          "</div>" +
+        "</div>";
+      document.getElementById("rankupContinueBtn").addEventListener("click", function () {
+        if (m.pendingSelect) ui.selectedRank = m.pendingSelect;
+        ui.fbSession = "A";
+        ui.rankUpModal = null;
+        render();
+      });
+      return;
+    }
+
+    var doneRank = m.rank;
+
+    var nextSectionHtml = "";
+    if (m.kind === "swim") {
+      var objectiveHtml;
+      if (m.nextRank) {
+        if (m.nextObjectiveAdapted !== m.nextObjectiveStandard) {
+          objectiveHtml = '<span class="rankup-strike">' + esc(m.nextObjectiveStandard) + '</span><span class="rankup-new-value" style="color:' + m.nextRank.accent + '">' + esc(m.nextObjectiveAdapted) + "</span>";
+        } else {
+          objectiveHtml = esc(m.nextObjectiveAdapted);
+        }
+        nextSectionHtml =
+          '<div class="rankup-arrow">↓</div>' +
+          '<div class="rankup-next-label">PROCHAIN OBJECTIF</div>' +
+          '<div class="rankup-next-title" style="color:' + m.nextRank.color + '">' + m.nextRank.emoji + " " + m.nextRank.name + "</div>" +
+          '<div class="rankup-objective">' + objectiveHtml + "</div>";
+      } else {
+        nextSectionHtml = '<div class="rankup-arrow">🏆</div><div class="rankup-next-title" style="color:' + doneRank.color + '">RADIANT ATTEINT</div>';
+      }
+    } else {
+      if (m.nextRank) {
+        var adjHtml = m.adjustedList.length
+          ? '<div class="rankup-adj-list">' + m.adjustedList.map(function (a) {
+              var sign = a.assisted ? "-" : "";
+              return (
+                '<div class="rankup-adj-row"><span class="name">' + esc(a.name) + "</span><span>" +
+                  '<span class="rankup-strike">' + sign + a.standard + "</span>" +
+                  '<span class="rankup-new-value" style="color:' + m.nextRank.accent + '">' + sign + a.adapted + " kg</span>" +
+                "</span></div>"
+              );
+            }).join("") + "</div>"
+          : '<div class="rankup-objective">Progression standard — rien à ajuster, ce rang était pile dans le rythme.</div>';
+        nextSectionHtml =
+          '<div class="rankup-arrow">↓</div>' +
+          '<div class="rankup-next-label">PROCHAIN RANG</div>' +
+          '<div class="rankup-next-title" style="color:' + m.nextRank.color + '">' + m.nextRank.emoji + " " + m.nextRank.name + "</div>" +
+          adjHtml;
+      } else {
+        nextSectionHtml = '<div class="rankup-arrow">🏆</div><div class="rankup-next-title" style="color:' + doneRank.color + '">RADIANT ATTEINT</div>';
+      }
+    }
+
+    var statsHtml =
+      '<div class="rankup-stats">' +
+        '<div class="rankup-stat-row"><span class="k">Débuté le</span><span class="v">' + esc(m.startDate) + "</span></div>" +
+        (m.kind === "swim" ? '<div class="rankup-stat-row"><span class="k">Objectif</span><span class="v">' + esc(m.objectiveText) + "</span></div>" : "") +
+        '<div class="rankup-stat-row"><span class="k">Réalisé en</span><span class="v">' + esc(m.duration) + "</span></div>" +
+      "</div>";
+
+    rankupModalRoot.innerHTML =
+      '<div class="rankup-overlay">' +
+        '<div class="rankup-card" style="background:linear-gradient(160deg,' + doneRank.bg + ' 0%, #0d0e14 100%);border:1px solid ' + doneRank.color + '40;box-shadow:0 0 70px ' + doneRank.glow + '">' +
+          '<div class="rankup-emoji" style="background:' + doneRank.color + '20;color:' + doneRank.color + '">' + doneRank.emoji + "</div>" +
+          '<div class="rankup-eyebrow" style="color:' + doneRank.color + '">' + (m.kind === "swim" ? "PALIER VALIDÉ" : "RANG VALIDÉ") + "</div>" +
+          '<div class="rankup-title" style="color:' + doneRank.color + '">' + doneRank.name + "</div>" +
+          statsHtml +
+          nextSectionHtml +
+          '<button type="button" class="rankup-continue-btn" id="rankupContinueBtn" style="background:' + doneRank.color + ';color:#0a0b0f">Continuer</button>' +
+        "</div>" +
+      "</div>";
+
+    document.getElementById("rankupContinueBtn").addEventListener("click", function () {
+      if (m.pendingSelect) ui.selectedRank = m.pendingSelect;
+      if (m.kind === "gym") ui.fbSession = "A";
+      ui.rankUpModal = null;
+      render();
+    });
+  }
+
+  function renderSwim(rank, rankIndex) {
+    var d = computeSwimPlan()[rankIndex];
+    return (
+      '<div style="display:flex;flex-direction:column;gap:12px">' +
+        '<div class="stat-row">' +
+          '<div class="stat-box"><div class="k">FRÉQUENCE</div><div class="v" style="color:' + rank.accent + '">' + d.freq + "</div></div>" +
+          '<div class="stat-box"><div class="k">DURÉE</div><div class="v" style="color:' + rank.accent + '">' + d.duration + "</div></div>" +
+          '<div class="stat-box"><div class="k">ESTIMATION</div><div class="v" style="color:' + rank.accent + '">' + (d.weeks ? d.weeks + " sem." : "∞") + "</div></div>" +
+        "</div>" +
+        '<div class="objective-box"><div class="k">OBJECTIF' + (d.adjusted ? ' · <span style="color:' + rank.accent + '">⚡ adapté à ton rythme</span>' : "") + '</div><div class="v">' + esc(d.objective) + "</div></div>" +
+      "</div>"
+    );
+  }
+
+  function renderFullBody(rank, rankIndex) {
+    var unlockedIdx = fbUnlockedIndex();
+    if (rankIndex > unlockedIdx) {
+      var prevName = rankIndex > 0 ? RANKS[rankIndex - 1].name : "";
+      return '<div class="locked-note">🔒 Palier verrouillé. Valide ' + prevName + " d'abord (3 semaines A+B+C réussies d'affilée).</div>";
+    }
+
+    var rankFbState = getFreshRankState(ui.selectedRank);
+    var sessionDefs = fullBodySessionsForRank(rankIndex);
+
+    var pipsHtml = [0, 1, 2].map(function (i) {
+      var filled = i < rankFbState.streak;
+      return '<div class="streak-pip" style="' + (filled ? "background:" + rank.color + ";box-shadow:0 0 8px " + rank.glow : "") + '"></div>';
+    }).join("");
+
+    var sessionTabsHtml = ["A", "B", "C"].map(function (letter) {
+      var s = rankFbState.sessions[letter];
+      var sDef = sessionDefs[letter];
+      var liveSuccess = s.locked ? evaluateSessionSuccess(sDef, s) : false;
+      var stateColor = s.locked ? (liveSuccess ? "#4caf50" : "#ef5350") : (ui.fbSession === letter ? rank.color : "rgba(255,255,255,0.08)");
+      var bg = s.locked ? (liveSuccess ? "rgba(76,175,80,0.12)" : "rgba(239,83,80,0.12)") : (ui.fbSession === letter ? rank.color + "15" : "rgba(255,255,255,0.02)");
+      var textColor = s.locked ? (liveSuccess ? "#4caf50" : "#ef5350") : (ui.fbSession === letter ? rank.color : "#666");
+      return (
+        '<button type="button" class="session-tab" data-session="' + letter + '" style="border-color:' + stateColor + ";background:" + bg + ";color:" + textColor + '">' +
+          (s.locked ? '<span class="session-check">' + (liveSuccess ? "✓" : "✗") + "</span>" : "") +
+          "SÉANCE " + letter +
+        "</button>"
+      );
+    }).join("");
+
+    var letter = ui.fbSession;
+    var sessionDef = sessionDefs[letter];
+    var sessionState = rankFbState.sessions[letter];
+    var locked = sessionState.locked;
+    var liveSessionSuccess = locked ? evaluateSessionSuccess(sessionDef, sessionState) : false;
+
+    var exercisesHtml = sessionDef.exercises.map(function (ex, i) {
+      var setsCount = ex.sets || 3;
+      var logEntry = locked && sessionState.log ? sessionState.log[i] : null;
+      var liveSets = locked && logEntry && logEntry.sets ? logEntry.sets.map(function (sl) { return Object.assign({}, sl, { passed: evaluateSet(ex, sl.reps, sl.weight) }); }) : null;
+      var exercisePassed = liveSets ? liveSets.every(function (sl) { return sl.passed; }) : null;
+
+      var setsHtml = "";
+      for (var s = 0; s < setsCount; s++) {
+        var setLog = liveSets ? liveSets[s] : null;
+        var setError = locked && setLog && !setLog.passed;
+        var readout = locked && setLog
+          ? setLog.reps + " reps · " + (ex.assisted ? "-" : "") + setLog.weight + " kg"
+          : "—";
+        setsHtml +=
+          '<div class="set-row">' +
+            '<span class="set-label">Série ' + (s + 1) + "</span>" +
+            '<div class="set-inputs">' +
+              '<span class="mini-readout' + (setError ? " error" : "") + (locked ? "" : " empty") + '">' + readout + "</span>" +
+              (locked ? '<span class="set-check">' + (setLog && setLog.passed ? "✓" : "✗") + "</span>" : "") +
+            "</div>" +
+          "</div>";
+      }
+
+      var warningHtml = (locked && !exercisePassed)
+        ? '<div class="ex-warning">⚠ Au moins une série n\'atteint pas ' + ex.targetReps + " reps " + (ex.assisted ? "avec " + ex.targetWeight + " kg d'assistance maximum" : "à " + ex.targetWeight + " kg minimum") + " — exercice non validé.</div>"
+        : "";
+
+      return (
+        '<div class="exercise-row">' +
+          '<div style="margin-bottom:8px">' +
+            '<div class="ex-name" style="' + (locked ? "color:" + (exercisePassed ? "#8fd19e" : "#ef8a87") : "") + '">' + esc(ex.name) + "</div>" +
+            '<div class="ex-meta">' + esc(ex.muscle) + " · cible " + setsCount + "x" + ex.targetReps + " à " + (ex.assisted ? "-" : "") + ex.targetWeight + " kg (chaque série)" + (ex.adjusted ? ' <span style="color:' + rank.accent + '">⚡ adapté</span>' : "") + "</div>" +
+          "</div>" +
+          setsHtml +
+          warningHtml +
+        "</div>"
+      );
+    }).join("");
+
+    var footerSessionHtml = !locked
+      ? '<p class="save-hint" style="font-family:\'Rajdhani\';font-size:11px;color:#555;text-align:center">Colle ta séance "' + rank.name + " - FULL BODY " + letter + '" dans la barre en haut pour la remplir et la verrouiller.</p>'
+      : '<div class="session-result-banner" style="border-color:' + (liveSessionSuccess ? "#4caf50" : "#ef5350") + ";background:" + (liveSessionSuccess ? "rgba(76,175,80,0.1)" : "rgba(239,83,80,0.1)") + ";color:" + (liveSessionSuccess ? "#4caf50" : "#ef5350") + '">' + (liveSessionSuccess ? "✓ SÉANCE RÉUSSIE" : "✗ SÉANCE ÉCHOUÉE") + " — VERROUILLÉE</div>";
+
+    var weeksEstimate = fbWeeksEstimate(rankIndex);
+    var overEstimate = rankFbState.weeksAttempted > weeksEstimate;
+    var failsLeft = Math.max(0, DEMOTION_FAIL_THRESHOLD - (rankFbState.consecutiveFails || 0));
+    var demotionWarningHtml = (overEstimate && rankIndex > 0)
+      ? '<div class="streak-hint" style="color:#ef8a87">⚠ Estimation dépassée. Encore ' + failsLeft + " semaine(s) ratée(s) d'affilée et le rang redescend à " + RANKS[rankIndex - 1].name + " (avec des cibles allégées pour retenter ensuite).</div>"
+      : "";
+
+    return (
+      "<div>" +
+        '<div class="stat-row" style="margin-bottom:14px">' +
+          '<div class="stat-box"><div class="k">ESTIMATION</div><div class="v" style="color:' + rank.accent + '">' + weeksEstimate + " sem.</div></div>" +
+          '<div class="stat-box"><div class="k">SEMAINES</div><div class="v" style="color:' + (overEstimate ? "#ef5350" : rank.accent) + '">' + rankFbState.weeksAttempted + "</div></div>" +
+        "</div>" +
+        '<div style="margin-bottom:18px">' +
+          '<div class="fb-week-head"><span>SEMAINE DU ' + formatWeekLabel(rankFbState.currentWeekKey) + '</span><span style="color:' + rank.color + '">' + rankFbState.streak + "/3 SEMAINES RÉUSSIES</span></div>" +
+          '<div class="streak-pips">' + pipsHtml + "</div>" +
+          '<div class="streak-hint">Réussis A + B + C cette semaine. Chaque lundi, la semaine se réinitialise si le trio n\'est pas complet — ton compteur repart alors à zéro.</div>' +
+          demotionWarningHtml +
+        "</div>" +
+        '<div class="session-tabs">' + sessionTabsHtml + "</div>" +
+        '<div class="exercise-panel">' +
+          '<div class="exercise-panel-head">' +
+            '<div class="focus">' + esc(sessionDef.focus) + "</div>" +
+            '<button type="button" id="copyTargetsBtn" class="copy-targets-btn">📋 Copier</button>' +
+          "</div>" +
+          exercisesHtml +
+        "</div>" +
+        footerSessionHtml +
+      "</div>"
+    );
+  }
+
+  function bindEvents(rank, rankIndex) {
+    Array.prototype.forEach.call(shell.querySelectorAll(".tab-btn"), function (btn) {
+      btn.addEventListener("click", function () {
+        state.tab = btn.getAttribute("data-tab");
+        saveJSON("activeTab", state.tab);
+        ui.selectedRank = firstUnvalidated(state.tab);
+        render();
+      });
+    });
+
+    Array.prototype.forEach.call(shell.querySelectorAll(".rank-btn"), function (btn) {
+      if (btn.hasAttribute("aria-disabled")) return;
+      btn.addEventListener("click", function () {
+        ui.selectedRank = btn.getAttribute("data-rank");
+        render();
+      });
+    });
+
+    var swimBtn = document.getElementById("swimValidateBtn");
+    if (swimBtn) swimBtn.addEventListener("click", function () { validateSwimRank(ui.selectedRank); });
+
+    Array.prototype.forEach.call(shell.querySelectorAll(".session-tab"), function (btn) {
+      btn.addEventListener("click", function () {
+        ui.fbSession = btn.getAttribute("data-session");
+        render();
+      });
+    });
+
+    var pasteInput = document.getElementById("pasteInput");
+    if (pasteInput) {
+      pasteInput.addEventListener("input", function () { ui.pasteDraft = pasteInput.value; });
+    }
+
+    var parseBtn = document.getElementById("parsePasteBtn");
+    if (parseBtn) {
+      parseBtn.addEventListener("click", function () {
+        var text = pasteInput ? pasteInput.value : ui.pasteDraft;
+        var result = applyPastedSession(text);
+        ui.pasteMessage = result.message;
+        ui.pasteOk = result.ok;
+        if (result.ok) ui.pasteDraft = "";
+        render();
+      });
+    }
+
+    var copyBtn = document.getElementById("copyTargetsBtn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", function () {
+        var sessionDef = fullBodySessionsForRank(rankIndex)[ui.fbSession];
+        var text = buildCopyText(rank, ui.fbSession, sessionDef);
+        copyTextToClipboard(text).then(function () {
+          copyBtn.textContent = "✓ Copié";
+          copyBtn.classList.add("copied");
+          setTimeout(function () { copyBtn.textContent = "📋 Copier"; copyBtn.classList.remove("copied"); }, 1600);
+        }).catch(function () {
+          copyBtn.textContent = "⚠ Échec — copie manuelle";
+          setTimeout(function () { copyBtn.textContent = "📋 Copier"; }, 2000);
+        });
+      });
+    }
+  }
+
+  render();
+})();
+</script>
