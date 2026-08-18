@@ -94,6 +94,9 @@
   .copy-targets-btn:hover { background: rgba(255,255,255,0.12); }
   .copy-targets-btn.copied { background: rgba(76,175,80,0.15); border-color: rgba(76,175,80,0.4); color: #8fd19e; }
 
+  .force-week-btn { margin-top: 10px; background: none; border: 1px dashed rgba(255,255,255,0.15); border-radius: 6px; color: #666; font-family: 'Rajdhani'; font-size: 11px; font-weight: 600; padding: 8px 10px; cursor: pointer; min-height: 40px; }
+  .force-week-btn:hover { color: #ccc; border-color: rgba(255,255,255,0.3); }
+
   .exercise-row { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
   .exercise-row:last-child { border-bottom: none; }
   .ex-name { font-family: 'Rajdhani'; font-size: 13.5px; font-weight: 600; color: #ccc; }
@@ -716,6 +719,59 @@
 
   var DEMOTION_FAIL_THRESHOLD = 3;
 
+  // Shared by the natural (real-date) week rollover and the manual "Nouvelle
+  // semaine" override — evaluates whatever the current week's sessions did,
+  // then advances to targetWeekKey (streak/validation/demotion all follow).
+  function performWeekTransition(rankId, existing, targetWeekKey) {
+    var rankIndex = RANKS.findIndex(function (r) { return r.id === rankId; });
+    var sessionDefs = fullBodySessionsForRank(rankIndex);
+    // If applyPastedSession already scored this week the moment the trio
+    // completed mid-week (weekOutcomeApplied), don't re-evaluate the same
+    // still-locked sessions here too — that would double-count the streak.
+    var allDoneLastWeek, newStreak, newConsecutiveFails;
+    if (existing.weekOutcomeApplied) {
+      allDoneLastWeek = true;
+      newStreak = existing.streak;
+      newConsecutiveFails = existing.consecutiveFails || 0;
+    } else {
+      allDoneLastWeek = ["A", "B", "C"].every(function (l) { return evaluateSessionSuccess(sessionDefs[l], existing.sessions[l]); });
+      newStreak = allDoneLastWeek ? Math.min(existing.streak + 1, 3) : 0;
+      newConsecutiveFails = allDoneLastWeek ? 0 : (existing.consecutiveFails || 0) + 1;
+    }
+    var weeksElapsed = Math.max(1, Math.round((weekKeyTime(targetWeekKey) - weekKeyTime(existing.currentWeekKey)) / (7 * 86400000)));
+    var weeksAttempted = (existing.weeksAttempted || 0) + weeksElapsed;
+    var result;
+
+    if (allDoneLastWeek && newStreak >= 3) {
+      var nextAdjustments = existing.frozenAdjustments ? existing.nextAdjustments : computeNextAdjustments(rankIndex, sessionDefs, existing.sessions, weeksAttempted);
+      result = Object.assign({}, existing, { validated: true, streak: 3, consecutiveFails: 0, weeksAttempted: weeksAttempted, nextAdjustments: nextAdjustments });
+      commitFbState(rankId, result);
+    } else if (rankIndex > 0 && weeksAttempted > fbWeeksEstimate(rankIndex) && newConsecutiveFails >= DEMOTION_FAIL_THRESHOLD) {
+      var prevId = RANKS[rankIndex - 1].id;
+      var prevState = state.fbState[prevId];
+      var easedAdjustments = easeAdjustmentsForDemotion(prevState && prevState.nextAdjustments);
+      commitFbState(prevId, {
+        validated: false, streak: 0, consecutiveFails: 0, weeksAttempted: 0, currentWeekKey: targetWeekKey,
+        sessions: { A: emptySession(), B: emptySession(), C: emptySession() },
+        nextAdjustments: easedAdjustments, frozenAdjustments: true
+      });
+      result = { validated: false, streak: 0, consecutiveFails: 0, weeksAttempted: 0, currentWeekKey: targetWeekKey, sessions: { A: emptySession(), B: emptySession(), C: emptySession() } };
+      commitFbState(rankId, result);
+      state.fbUnlockedAt = Object.assign({}, state.fbUnlockedAt);
+      delete state.fbUnlockedAt[rankId];
+      saveJSON("fbUnlockedAt", state.fbUnlockedAt);
+      ui.rankUpModal = {
+        kind: "gym-demote", rank: RANKS[rankIndex], prevRank: RANKS[rankIndex - 1],
+        weeksAttempted: weeksAttempted, weeksEstimate: fbWeeksEstimate(rankIndex),
+        pendingSelect: prevId
+      };
+    } else {
+      result = { validated: false, streak: newStreak, consecutiveFails: newConsecutiveFails, weeksAttempted: weeksAttempted, currentWeekKey: targetWeekKey, sessions: { A: emptySession(), B: emptySession(), C: emptySession() } };
+      commitFbState(rankId, result);
+    }
+    return result;
+  }
+
   function getFreshRankState(rankId) {
     var existing = state.fbState[rankId];
     var currentWeekKey = weekKey(new Date());
@@ -723,46 +779,24 @@
       return { validated: false, streak: 0, consecutiveFails: 0, weeksAttempted: 0, currentWeekKey: currentWeekKey, sessions: { A: emptySession(), B: emptySession(), C: emptySession() } };
     }
     if (existing.validated) return existing;
-    if (existing.currentWeekKey !== currentWeekKey) {
-      var rankIndex = RANKS.findIndex(function (r) { return r.id === rankId; });
-      var sessionDefs = fullBodySessionsForRank(rankIndex);
-      var allDoneLastWeek = ["A", "B", "C"].every(function (l) { return evaluateSessionSuccess(sessionDefs[l], existing.sessions[l]); });
-      var newStreak = allDoneLastWeek ? Math.min(existing.streak + 1, 3) : 0;
-      var newConsecutiveFails = allDoneLastWeek ? 0 : (existing.consecutiveFails || 0) + 1;
-      var weeksElapsed = Math.max(1, Math.round((weekKeyTime(currentWeekKey) - weekKeyTime(existing.currentWeekKey)) / (7 * 86400000)));
-      var weeksAttempted = (existing.weeksAttempted || 0) + weeksElapsed;
-      var result;
-
-      if (allDoneLastWeek && newStreak >= 3) {
-        var nextAdjustments = existing.frozenAdjustments ? existing.nextAdjustments : computeNextAdjustments(rankIndex, sessionDefs, existing.sessions, weeksAttempted);
-        result = Object.assign({}, existing, { validated: true, streak: 3, consecutiveFails: 0, weeksAttempted: weeksAttempted, nextAdjustments: nextAdjustments });
-        commitFbState(rankId, result);
-      } else if (rankIndex > 0 && weeksAttempted > fbWeeksEstimate(rankIndex) && newConsecutiveFails >= DEMOTION_FAIL_THRESHOLD) {
-        var prevId = RANKS[rankIndex - 1].id;
-        var prevState = state.fbState[prevId];
-        var easedAdjustments = easeAdjustmentsForDemotion(prevState && prevState.nextAdjustments);
-        commitFbState(prevId, {
-          validated: false, streak: 0, consecutiveFails: 0, weeksAttempted: 0, currentWeekKey: currentWeekKey,
-          sessions: { A: emptySession(), B: emptySession(), C: emptySession() },
-          nextAdjustments: easedAdjustments, frozenAdjustments: true
-        });
-        result = { validated: false, streak: 0, consecutiveFails: 0, weeksAttempted: 0, currentWeekKey: currentWeekKey, sessions: { A: emptySession(), B: emptySession(), C: emptySession() } };
-        commitFbState(rankId, result);
-        state.fbUnlockedAt = Object.assign({}, state.fbUnlockedAt);
-        delete state.fbUnlockedAt[rankId];
-        saveJSON("fbUnlockedAt", state.fbUnlockedAt);
-        ui.rankUpModal = {
-          kind: "gym-demote", rank: RANKS[rankIndex], prevRank: RANKS[rankIndex - 1],
-          weeksAttempted: weeksAttempted, weeksEstimate: fbWeeksEstimate(rankIndex),
-          pendingSelect: prevId
-        };
-      } else {
-        result = { validated: false, streak: newStreak, consecutiveFails: newConsecutiveFails, weeksAttempted: weeksAttempted, currentWeekKey: currentWeekKey, sessions: { A: emptySession(), B: emptySession(), C: emptySession() } };
-        commitFbState(rankId, result);
-      }
-      return result;
+    // Only roll forward when real time has actually caught up to (or passed)
+    // the stored week — "Nouvelle semaine" can push currentWeekKey ahead of
+    // today, and this must not immediately get evaluated/undone again here.
+    if (weekKeyTime(existing.currentWeekKey) < weekKeyTime(currentWeekKey)) {
+      return performWeekTransition(rankId, existing, currentWeekKey);
     }
     return existing;
+  }
+
+  // Manual escape hatch: forces the CURRENT (real-time) week bucket to close
+  // and a new one to open, exactly as if a real Monday had passed — for
+  // someone training faster than the calendar (e.g. two full A+B+C rounds
+  // within what the app still considers a single week).
+  function forceNewWeek(rankId) {
+    var existing = state.fbState[rankId];
+    if (!existing || existing.validated) return;
+    var targetWeekKey = weekKey(new Date(weekKeyTime(existing.currentWeekKey) + 7 * 86400000));
+    performWeekTransition(rankId, existing, targetWeekKey);
   }
 
   function commitFbState(rankId, newState) {
@@ -882,7 +916,7 @@
         var nextAdjustments = current.frozenAdjustments ? current.nextAdjustments : computeNextAdjustments(rankIndex, sessionDefs, newSessions, weeksAttemptedForCalc);
         newState = Object.assign({}, newState, { streak: 3, consecutiveFails: 0, validated: true, weeksAttempted: weeksAttemptedForCalc, nextAdjustments: nextAdjustments });
         justValidated = true;
-      } else { newState = Object.assign({}, newState, { streak: newStreak }); }
+      } else { newState = Object.assign({}, newState, { streak: newStreak, consecutiveFails: 0, weekOutcomeApplied: true }); }
     }
 
     commitFbState(parsed.rankId, newState);
@@ -1294,6 +1328,7 @@
           '<div class="streak-pips">' + pipsHtml + "</div>" +
           '<div class="streak-hint">Réussis A + B + C cette semaine. Chaque lundi, la semaine se réinitialise si le trio n\'est pas complet — ton compteur repart alors à zéro.</div>' +
           demotionWarningHtml +
+          '<button type="button" id="forceNewWeekBtn" class="force-week-btn">↻ Nouvelle semaine (débloquer)</button>' +
         "</div>" +
         '<div class="session-tabs">' + sessionTabsHtml + "</div>" +
         '<div class="exercise-panel">' +
@@ -1380,6 +1415,14 @@
           render();
           if (result.ok) setTimeout(function () { location.reload(); }, 1200);
         });
+      });
+    }
+
+    var forceWeekBtn = document.getElementById("forceNewWeekBtn");
+    if (forceWeekBtn) {
+      forceWeekBtn.addEventListener("click", function () {
+        forceNewWeek(ui.selectedRank);
+        render();
       });
     }
   }
