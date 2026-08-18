@@ -94,9 +94,6 @@
   .copy-targets-btn:hover { background: rgba(255,255,255,0.12); }
   .copy-targets-btn.copied { background: rgba(76,175,80,0.15); border-color: rgba(76,175,80,0.4); color: #8fd19e; }
 
-  .force-week-btn { margin-top: 10px; background: none; border: 1px dashed rgba(255,255,255,0.15); border-radius: 6px; color: #666; font-family: 'Rajdhani'; font-size: 11px; font-weight: 600; padding: 8px 10px; cursor: pointer; min-height: 40px; }
-  .force-week-btn:hover { color: #ccc; border-color: rgba(255,255,255,0.3); }
-
   .exercise-row { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
   .exercise-row:last-child { border-bottom: none; }
   .ex-name { font-family: 'Rajdhani'; font-size: 13.5px; font-weight: 600; color: #ccc; }
@@ -788,15 +785,19 @@
     return existing;
   }
 
-  // Manual escape hatch: forces the CURRENT (real-time) week bucket to close
-  // and a new one to open, exactly as if a real Monday had passed — for
-  // someone training faster than the calendar (e.g. two full A+B+C rounds
-  // within what the app still considers a single week).
+  // Closes out the current week bucket and opens a new one, exactly as if a
+  // real Monday had passed. Used automatically when someone tries to log a
+  // new A/B/C round while every slot from the current bucket is still
+  // locked — i.e. they trained faster than the calendar (see
+  // applyPastedSession) rather than requiring a manual "unstick" step.
   function forceNewWeek(rankId) {
     var existing = state.fbState[rankId];
-    if (!existing || existing.validated) return;
-    var targetWeekKey = weekKey(new Date(weekKeyTime(existing.currentWeekKey) + 7 * 86400000));
-    performWeekTransition(rankId, existing, targetWeekKey);
+    if (!existing || existing.validated) return null;
+    var realWeekKey = weekKey(new Date());
+    var targetWeekKey = weekKeyTime(realWeekKey) > weekKeyTime(existing.currentWeekKey)
+      ? realWeekKey
+      : weekKey(new Date(weekKeyTime(existing.currentWeekKey) + 7 * 86400000));
+    return performWeekTransition(rankId, existing, targetWeekKey);
   }
 
   function commitFbState(rankId, newState) {
@@ -885,7 +886,21 @@
 
     var current = getFreshRankState(parsed.rankId);
     if (current.sessions[parsed.sessionLetter].locked) {
-      return { ok: false, message: "La séance " + parsed.sessionLetter + " de " + RANKS[rankIndex].name + " est déjà enregistrée et verrouillée." };
+      var allLocked = ["A", "B", "C"].every(function (l) { return current.sessions[l].locked; });
+      if (!allLocked) {
+        return { ok: false, message: "La séance " + parsed.sessionLetter + " de " + RANKS[rankIndex].name + " est déjà enregistrée et verrouillée." };
+      }
+      // Every slot for this week is already full — this paste can only mean
+      // a new round has started faster than the calendar caught up, so roll
+      // the week forward automatically instead of blocking on it.
+      forceNewWeek(parsed.rankId);
+      if (rankIndex > fbUnlockedIndex()) {
+        return { ok: false, message: RANKS[rankIndex].name + " n'est plus débloqué (le rang est redescendu). Retente d'abord le rang précédent." };
+      }
+      current = getFreshRankState(parsed.rankId);
+      if (current.validated) {
+        return { ok: false, message: RANKS[rankIndex].name + " est déjà entièrement validé — colle plutôt une séance du rang suivant." };
+      }
     }
 
     var sessionDefs = fullBodySessionsForRank(rankIndex);
@@ -1328,7 +1343,6 @@
           '<div class="streak-pips">' + pipsHtml + "</div>" +
           '<div class="streak-hint">Réussis A + B + C cette semaine. Chaque lundi, la semaine se réinitialise si le trio n\'est pas complet — ton compteur repart alors à zéro.</div>' +
           demotionWarningHtml +
-          '<button type="button" id="forceNewWeekBtn" class="force-week-btn">↻ Nouvelle semaine (débloquer)</button>' +
         "</div>" +
         '<div class="session-tabs">' + sessionTabsHtml + "</div>" +
         '<div class="exercise-panel">' +
@@ -1418,13 +1432,6 @@
       });
     }
 
-    var forceWeekBtn = document.getElementById("forceNewWeekBtn");
-    if (forceWeekBtn) {
-      forceWeekBtn.addEventListener("click", function () {
-        forceNewWeek(ui.selectedRank);
-        render();
-      });
-    }
   }
 
   render();
